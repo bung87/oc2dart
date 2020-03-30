@@ -1,8 +1,10 @@
 
 import * as fs from 'fs';
 import * as readline from 'readline';
-import * as Rx from 'rx';
+import { fromEvent } from 'rxjs';
+import { getConverter } from './converter';
 
+const { concatAll, map, filter, takeUntil } = require('rxjs/operators');
 /*
 ** InstanceMethod - as prefix
 ** StaticMethod + as prefix
@@ -27,8 +29,21 @@ export class Token {
     tokenType: TokenType = TokenType.Blank;
     type: string = "";
     params?: Param[]
+    body?: string
     constructor() { }
-
+    static property(): Token {
+        const self = new Token;
+        self.tokenType = TokenType.Property
+        return self;
+    }
+    privateToGetter(): Token {
+        const getter = new Token;
+        Object.assign(getter, this);
+        getter.tokenType = TokenType.InstanceMethod
+        getter.body = getter.name
+        getter.name = `get ${getter.name.substr(1)}`
+        return getter
+    }
 }
 
 function mapToToken(line: any, _index: number, _: any): Token {
@@ -66,7 +81,7 @@ function mapToToken(line: any, _index: number, _: any): Token {
                             }
                         });
                         result.params = params;
-                        
+
                     }
                     break;
                 case TokenType.Property:
@@ -79,7 +94,7 @@ function mapToToken(line: any, _index: number, _: any): Token {
                     // may have no space between features and type
                     if (ci !== -1) {
 
-                        features = type.substring(1, ci)
+                        features = type.substring(0, ci + 1)
                         type = type.substr(ci + 1)
 
                     } else {
@@ -101,15 +116,58 @@ function mapToToken(line: any, _index: number, _: any): Token {
     return result;
 }
 
-export function fromFile(filepath: string) {
+const classes: Token[] = []
 
+let converter: { [propName: string]: (token: Token) => string; };
+
+function toDartToken(token: Token): Token[] {
+    const result: Token[] = []
+    switch (token.tokenType) {
+        case TokenType.Class:
+            classes.push(token);
+            break;
+        case TokenType.Property:
+            if (!converter) {
+                console.log("!converter")
+                converter = getConverter(classes);
+            }
+            if (token.features?.includes("readonly")) {
+                const t = Token.property()
+                t.name = `_${token.name}`
+                t.type = converter[token.type](token) as string;
+                const t2 = t.privateToGetter();
+                result.push(t)
+                result.push(t2)
+            } else if (token.features?.includes('readwrite')) {
+                const t = new Token()
+                t.name = token.name
+                t.type = converter[token.type](token) as string;
+                result.push(t)
+            }
+            break;
+        case TokenType.InstanceMethod:
+            result.push(token)
+            break;
+        case TokenType.StaticMethod:
+            result.push(token)
+            break;
+    }
+    return result
+}
+
+export function fromFile(filepath: string) {
+    console.log(classes.length);
     const readInterface = readline.createInterface({
         input: fs.createReadStream(filepath)
     });
-    return Rx.Observable.fromEvent(readInterface, 'line')
-        .filter((x, _) => /^[\s#\t\/\{\}]/.test(x as string) === false && (x as string).length > 0)
-        .takeUntil(Rx.Observable.fromEvent(readInterface, 'close'))
-        .map(mapToToken)
+    
+    return fromEvent(readInterface, 'line')
+        .pipe(
+            filter((x: string) => /^[\s#\t\/\{\}]/.test(x as string) === false && (x as string).length > 0),
+            takeUntil(fromEvent(readInterface, 'close')),
+            map(mapToToken),
+            map(toDartToken), concatAll()
+        )
 
 }
 

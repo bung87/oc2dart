@@ -30,7 +30,7 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
-    "rx": "^4.1.0"
+    "rxjs": "^6.5.4"
   },
   "devDependencies": {
     "@types/jest": "^23.3.3",
