@@ -2,16 +2,16 @@
 import * as fs from 'fs';
 import * as readline from 'readline';
 import { fromEvent } from 'rxjs';
-import { getConverter } from './converter';
-import {concatAll, filter, map, takeUntil}  from 'rxjs/operators';
+import { toDartToken } from './converter';
+import { concatAll, filter, map, takeUntil } from 'rxjs/operators';
 /*
 ** InstanceMethod - as prefix
 ** StaticMethod + as prefix
 */
-export enum TokenType { Blank = "", End = '@end', BraceOpen = '{', BraceClose = '}', Comma = ',', Class = '@class', Interface = '@interface', Property = '@property', InstanceMethod = '-', StaticMethod = '+' }
+export enum TokenType { Getter = "", Blank = "", End = '@end', BraceOpen = '{', BraceClose = '}', Comma = ',', Class = '@class', Interface = '@interface', Property = '@property', InstanceMethod = '-', StaticMethod = '+' }
 
 export class PositionalParam {
-    constructor(public pos: number, public type: string) { }
+    constructor(public pos: number, public type: string, public varname: string) { }
 }
 
 
@@ -23,7 +23,7 @@ export class NamedParam {
 type Param = PositionalParam | NamedParam
 
 export class Token {
-    name: string = "";
+    _name: string = "";
     features?: string[];
     tokenType: TokenType = TokenType.Blank;
     type: string = "";
@@ -35,13 +35,96 @@ export class Token {
         self.tokenType = TokenType.Property
         return self;
     }
+    static instanceMethod() {
+        const self = new Token;
+        self.tokenType = TokenType.InstanceMethod
+        return self
+    }
+
+    static staticMethod() {
+        const self = new Token;
+        self.tokenType = TokenType.StaticMethod
+        return self;
+    }
+    set name(v){
+        this._name = v.trim()
+    }
+    get name(){
+        return this._name
+    }
     privateToGetter(): Token {
         const getter = new Token;
         Object.assign(getter, this);
-        getter.tokenType = TokenType.InstanceMethod
+        getter.tokenType = TokenType.Getter
         getter.body = getter.name
-        getter.name = `get ${getter.name.substr(1)}`
+        getter.name = `${getter.name.substr(1)}`
         return getter
+    }
+    handlePositionalParams() {
+        const positionalParams = this.params?.filter(x => x instanceof PositionalParam).sort((a, b) => (a as PositionalParam).pos - (b as PositionalParam).pos);
+        return positionalParams?.map(x => `${x.type} ${x.varname}`).join(',').trim()
+    }
+    handleNamedParams() {
+        const namedParams = this.params?.filter(x => x instanceof NamedParam);
+        return namedParams?.map(x => `${x.varname}: ${x.type} `).join(',').trim()
+    }
+    get suffixVoid() {
+        return this.type !== 'void' ? `${this.type.trim()} ` : ''
+    }
+    toDartCode() {
+        let result = "";
+        switch (this.tokenType) {
+            case TokenType.Interface:
+                result = `class ${this.name}{`
+                break;
+            case TokenType.Property:
+                result = `${this.type} ${this.name};`
+                break;
+            case TokenType.Getter:
+                result = `${this.type} get ${this.name} => ${this.body};`;
+                break;
+            case TokenType.InstanceMethod:
+                if (this.params) {
+                    const hasPositinal = this.params.some(x => x instanceof PositionalParam)
+                    const hasNamed = this.params.some(x => x instanceof NamedParam)
+                    if (hasPositinal && hasNamed) {
+                        result = `${this.suffixVoid}${this.name}(${this.handlePositionalParams()},{ ${this.handleNamedParams()} } ){}`
+                    } else if (hasPositinal) {
+                        result = `${this.suffixVoid}${this.name}(${this.handlePositionalParams()} ){}`
+                    } else if (hasNamed) {
+                        result = `${this.suffixVoid}${this.name}({ ${this.handleNamedParams()} } ){}`
+                    }
+                } else {
+                    result = `${this.suffixVoid}${this.name}() {}`
+                }
+                break;
+            case TokenType.StaticMethod:
+                if (this.params) {
+                    const hasPositinal = this.params.some(x => x instanceof PositionalParam)
+                    const hasNamed = this.params.some(x => x instanceof NamedParam)
+                    if (hasPositinal && hasNamed) {
+                        result = `static ${this.suffixVoid}${this.name}(${this.handlePositionalParams()},{ ${this.handleNamedParams()} } ){}`
+                    } else if (hasPositinal) {
+                        result = `static ${this.suffixVoid}${this.name}(${this.handlePositionalParams()} ){}`
+                    } else if (hasNamed) {
+                        result = `static ${this.suffixVoid}${this.name}({ ${this.handleNamedParams()} } ){}`
+                    }
+                } else {
+                    result = `static ${this.suffixVoid}${this.name}() {}`
+                }
+                break;
+            case TokenType.End:
+                return '}'
+            default:
+                result = this.toString()
+                break;
+            // case TokenType.InstanceMethod:
+
+        }
+        if (this.tokenType.valueOf() !== TokenType.Interface && this.tokenType.valueOf() !== TokenType.End) {
+            result = `  ${result}`
+        }
+        return result;
     }
 }
 
@@ -54,6 +137,9 @@ function mapToToken(line: any, _index: number): Token {
             let name;
             const id = line.substring(TokenType[k].length + 1, line.length - 1);
             switch (TokenType[k]) {
+                case TokenType.Interface:
+                    name =  line.substring(TokenType[k].length + 1,line.indexOf(':') );
+                    break;
                 case TokenType.StaticMethod:
                 case TokenType.InstanceMethod:
                     const sep = line.indexOf(':');
@@ -74,8 +160,9 @@ function mapToToken(line: any, _index: number): Token {
                                 const varname = s.substr(s.indexOf(')') + 1)
                                 params.push(new NamedParam(name, type, varname));
                             } else {
+                                const varname = s.substr(s.indexOf(')') + 1)
                                 const type = s.substring(s.indexOf('(') + 1, s.indexOf(')'))
-                                params.push(new PositionalParam(pos, type));
+                                params.push(new PositionalParam(pos, type, varname));
                                 pos++;
                             }
                         });
@@ -115,57 +202,24 @@ function mapToToken(line: any, _index: number): Token {
     return result;
 }
 
-const classes: Token[] = []
 
-let converter: { [propName: string]: (token: Token) => string; };
 
-function toDartToken(token: Token): Token[] {
-    const result: Token[] = []
-    switch (token.tokenType) {
-        case TokenType.Class:
-            classes.push(token);
-            break;
-        case TokenType.Property:
-            if (!converter) {
-                console.log("!converter")
-                converter = getConverter(classes);
-            }
-            if (token.features?.includes("readonly")) {
-                const t = Token.property()
-                t.name = `_${token.name}`
-                t.type = converter[token.type](token) as string;
-                const t2 = t.privateToGetter();
-                result.push(t)
-                result.push(t2)
-            } else if (token.features?.includes('readwrite')) {
-                const t = new Token()
-                t.name = token.name
-                t.type = converter[token.type](token) as string;
-                result.push(t)
-            }
-            break;
-        case TokenType.InstanceMethod:
-            result.push(token)
-            break;
-        case TokenType.StaticMethod:
-            result.push(token)
-            break;
-    }
-    return result
-}
+
 
 export function fromFile(filepath: string) {
-    console.log(classes.length);
+
     const readInterface = readline.createInterface({
         input: fs.createReadStream(filepath)
     });
-    
+    const classes: Token[] = []
+    const converter: { [propName: string]: (token: Token) => string; } | null = null;
+    const self = { 'classes': classes, 'converter': converter }
     return fromEvent(readInterface, 'line')
         .pipe(
             filter((x: any) => /^[\s#\t\/\{\}]/.test(x as string) === false && (x as string).length > 0),
             takeUntil(fromEvent(readInterface, 'close')),
             map(mapToToken),
-            map(toDartToken), concatAll()
+            map(toDartToken, self), concatAll()
         )
 
 }
