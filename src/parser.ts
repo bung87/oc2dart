@@ -9,12 +9,25 @@ import * as Rx from 'rx';
 */
 export enum TokenType { Blank = "", End = '@end', BraceOpen = '{', BraceClose = '}', Comma = ',', Class = '@class', Interface = '@interface', Property = '@property', InstanceMethod = '-', StaticMethod = '+' }
 
+export class PositionalParam {
+    constructor(public pos: number, public type: string) { }
+}
+
+
+export class NamedParam {
+
+    constructor(public name: string, public type: string, public varname: string) { }
+}
+
+type Param = PositionalParam | NamedParam
+
 export class Token {
     name: string = "";
     features?: string[];
     tokenType: TokenType = TokenType.Blank;
     type: string = "";
-    constructor () { }
+    params?: Param[]
+    constructor() { }
 
 }
 
@@ -31,8 +44,30 @@ function mapToToken(line: any, _index: number, _: any): Token {
                 case TokenType.InstanceMethod:
                     const sep = line.indexOf(':');
                     const hasParams = sep !== -1 ? true : false;
-                    name = line.substring(line.indexOf(')') + 1, hasParams ? sep : line.indexOf(';')).trim()
+                    name = line.substring(line.indexOf(')') + 1, hasParams ? sep : line.lastIndexOf(';')).trim()
                     result.type = line.substring(line.indexOf('(') + 1, line.indexOf(')'))
+
+                    if (hasParams) {
+                        const paramsStr = line.substring(line.indexOf(':') + 1, line.lastIndexOf(';'));
+                        const paramsArr = paramsStr.split(' ')
+                        let pos = 0;
+                        let params: Param[] = [];
+                        paramsArr.forEach((s: string) => {
+                            const isNamed = s.indexOf(':') !== -1;
+                            if (isNamed) {
+                                const name = s.substring(0, s.indexOf(':'));
+                                const type = s.substring(s.indexOf('(') + 1, s.indexOf(')'))
+                                const varname = s.substr(s.indexOf(')') + 1)
+                                params.push(new NamedParam(name, type, varname));
+                            } else {
+                                const type = s.substring(s.indexOf('(') + 1, s.indexOf(')'))
+                                params.push(new PositionalParam(pos, type));
+                                pos++;
+                            }
+                        });
+                        result.params = params;
+                        
+                    }
                     break;
                 case TokenType.Property:
                     const arr = line.split(/\s+/)
@@ -66,17 +101,17 @@ function mapToToken(line: any, _index: number, _: any): Token {
     return result;
 }
 
-export function fromFile(filepath:string){
+export function fromFile(filepath: string) {
 
-  const readInterface = readline.createInterface({
-      input: fs.createReadStream(filepath)
-  });
-  return Rx.Observable.fromEvent(readInterface, 'line')
-  .filter((x, _) => /^[\s#\t\/\{\}]/.test(x as string) === false && (x as string).length > 0)
-  .takeUntil(Rx.Observable.fromEvent(readInterface, 'close'))
-  .map(mapToToken)
+    const readInterface = readline.createInterface({
+        input: fs.createReadStream(filepath)
+    });
+    return Rx.Observable.fromEvent(readInterface, 'line')
+        .filter((x, _) => /^[\s#\t\/\{\}]/.test(x as string) === false && (x as string).length > 0)
+        .takeUntil(Rx.Observable.fromEvent(readInterface, 'close'))
+        .map(mapToToken)
 
 }
 
 
-  
+
