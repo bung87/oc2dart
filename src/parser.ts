@@ -3,8 +3,7 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 import { fromEvent } from 'rxjs';
 import { getConverter } from './converter';
-
-const { concatAll, map, filter, takeUntil } = require('rxjs/operators');
+import {concatAll, filter, map, takeUntil}  from 'rxjs/operators';
 /*
 ** InstanceMethod - as prefix
 ** StaticMethod + as prefix
@@ -46,8 +45,8 @@ export class Token {
     }
 }
 
-function mapToToken(line: any, _index: number, _: any): Token {
-    let result = new Token();
+function mapToToken(line: any, _index: number): Token {
+    const result = new Token();
     Object.keys(TokenType).forEach(key => {
         const k = key as keyof typeof TokenType;
         const i = line.indexOf(TokenType[k]);
@@ -66,7 +65,7 @@ function mapToToken(line: any, _index: number, _: any): Token {
                         const paramsStr = line.substring(line.indexOf(':') + 1, line.lastIndexOf(';'));
                         const paramsArr = paramsStr.split(' ')
                         let pos = 0;
-                        let params: Param[] = [];
+                        const params: Param[] = [];
                         paramsArr.forEach((s: string) => {
                             const isNamed = s.indexOf(':') !== -1;
                             if (isNamed) {
@@ -163,7 +162,7 @@ export function fromFile(filepath: string) {
     
     return fromEvent(readInterface, 'line')
         .pipe(
-            filter((x: string) => /^[\s#\t\/\{\}]/.test(x as string) === false && (x as string).length > 0),
+            filter((x: any) => /^[\s#\t\/\{\}]/.test(x as string) === false && (x as string).length > 0),
             takeUntil(fromEvent(readInterface, 'close')),
             map(mapToToken),
             map(toDartToken), concatAll()
