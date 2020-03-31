@@ -1,4 +1,4 @@
-import { Token, TokenType } from './parser';
+import { Token, TokenType,Param } from './token';
 import { calculateLevDistance } from './utils';
 
 export function getConverter(
@@ -114,7 +114,7 @@ export function toDartToken(this: any, token: Token): Token[] {
         const t = Token.staticMethod();
         t.name = token.name;
         t.type = this.converter[token.type](token);
-        t.params = token.params?.map(x => {
+        t.params = token.params?.map( (x:Param) => {
           const y = Object.create(Object.getPrototypeOf(x));
           Object.assign(y, { ...x, type: this.converter[x.type](x) });
           return y;
