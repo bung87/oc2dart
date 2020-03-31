@@ -6,7 +6,6 @@ const filepath = path.join(__dirname, 'GameData.h');
 const resultpath = path.join(__dirname, 'game_data.dart');
 const content = fs.readFileSync(filepath).toString();
 
-
 test('Should match GameData.h from file', done => {
   let result = '';
   fromFile(filepath).subscribe(

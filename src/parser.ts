@@ -181,7 +181,7 @@ export class Token {
 
 function mapToToken(rawLine: any, _: number): Token {
   const result = new Token();
-  let line = rawLine.replace(/\s*(?=\*)/,"");
+  let line = rawLine.replace(/\s*(?=\*)/, '');
   Object.keys(TokenType).forEach(key => {
     const k = key as keyof typeof TokenType;
     const i = line.indexOf(TokenType[k]);
@@ -233,7 +233,7 @@ function mapToToken(rawLine: any, _: number): Token {
           }
           break;
         case TokenType.Property:
-          line = line.replace(/\)(?=[\w])/,") ")
+          line = line.replace(/\)(?=[\w])/, ') ');
           const arr = line.split(/\s+/);
           name = arr[arr.length - 1];
           name = name.substring(0, name.length - 1);
