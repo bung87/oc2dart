@@ -21,12 +21,12 @@
     "clean": "rimraf lib && rimraf coverage",
     "format": "prettier --write \"{src,__tests__}/**/*.ts\" --single-quote --trailing-comma es5",
     "lint": "tslint --force --format verbose \"src/**/*.ts\"",
-    "prepublishOnly": "npm run build",
-    "prebuild": "npm run clean && npm run format && npm run lint && echo Using TypeScript && tsc --version",
+    "prepublishOnly": "yarn run build",
+    "prebuild": "yarn run clean && yarn run format && yarn run lint && echo Using TypeScript && tsc --version",
     "build": "tsc --pretty",
     "test": "jest",
     "coverage": "jest --coverage",
-    "watch": "npm run build -- --watch",
+    "watch": "yarn run build -- --watch",
     "watch:test": "jest --watch"
   },
   "dependencies": {
