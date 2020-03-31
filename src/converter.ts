@@ -1,4 +1,4 @@
-import { Token, TokenType,Param } from './token';
+import { Token, TokenType, Param, Member } from './token';
 import { calculateLevDistance } from './utils';
 
 export function getConverter(
@@ -42,14 +42,14 @@ export function getConverter(
     }
   };
   const underlyingObj = {
-    int: (token: Token) => token.type,
-    'NSString*': (_: Token) => 'String',
-    BOOL: (_: Token) => 'bool',
-    void: (_: Token) => 'void',
-    'NSNumber*': (_: Token) => 'num',
+    int: (token: Token | Member) => token.type,
+    'NSString*': (_: Token | Member) => 'String',
+    BOOL: (_: Token | Member) => 'bool',
+    void: (_: Token | Member) => 'void',
+    'NSNumber*': (_: Token | Member) => 'num',
     'NSArray*': handleArr,
     'NSMutableArray*': handleArr,
-    'NSDictionary*': (_: Token) => {
+    'NSDictionary*': (_: Token | Member) => {
       return `Map`;
     },
   };
@@ -59,7 +59,6 @@ export function getConverter(
       if (Object.keys(obj).includes(name)) {
         return obj[name];
       } else {
-        // console.log(name,233)
         return (token: Token) => token.type.replace(/[^A-Za-z0-9\s]/, '');
       }
     },
@@ -67,7 +66,7 @@ export function getConverter(
   return new Proxy(underlyingObj, proxyHandler);
 }
 
-export function toDartToken(this: any, token: Token): Token[] {
+export function toDartToken(this: any, token: any): Token[] {
   const result: Token[] = [];
   switch (token.tokenType) {
     case TokenType.Class:
@@ -97,11 +96,14 @@ export function toDartToken(this: any, token: Token): Token[] {
       }
       break;
     case TokenType.InstanceMethod:
+      if (!this.converter) {
+        this.converter = getConverter(this.classes);
+      }
       {
         const t = Token.instanceMethod();
         t.name = token.name;
         t.type = this.converter[token.type](token);
-        t.params = token.params?.map(x => {
+        t.params = token.params?.map((x: any) => {
           const y = Object.create(Object.getPrototypeOf(x));
           Object.assign(y, { ...x, type: this.converter[x.type](x) });
           return y;
@@ -111,17 +113,31 @@ export function toDartToken(this: any, token: Token): Token[] {
       break;
     case TokenType.StaticMethod:
       {
+        if (!this.converter) {
+          this.converter = getConverter(this.classes);
+        }
         const t = Token.staticMethod();
         t.name = token.name;
         t.type = this.converter[token.type](token);
-        t.params = token.params?.map( (x:Param) => {
+        t.params = token.params?.map((x: Param) => {
           const y = Object.create(Object.getPrototypeOf(x));
           Object.assign(y, { ...x, type: this.converter[x.type](x) });
           return y;
         });
         result.push(t);
       }
-
+      break;
+    case TokenType.StructClose:
+      if (!this.converter) {
+        this.converter = getConverter(this.classes);
+      }
+      const t = token;
+      t.members = t.members?.map((x: Member) => {
+        const y = Object.create(Object.getPrototypeOf(x));
+        Object.assign(y, { ...x, type: this.converter[x.type](x) });
+        return y;
+      });
+      result.push(t);
       break;
     default:
       result.push(token);

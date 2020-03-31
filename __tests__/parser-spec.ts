@@ -1,10 +1,14 @@
 import * as path from 'path';
-import { fromFile, fromContent, convert } from '../src/parser';
+import { fromFile, fromContent, convert } from '../src/';
 import * as fs from 'fs';
 
 const filepath = path.join(__dirname, 'GameData.h');
 const resultpath = path.join(__dirname, 'game_data.dart');
 const content = fs.readFileSync(filepath).toString();
+
+const filepath2 = path.join(__dirname, 'enum_struct.h');
+const resultpath2 = path.join(__dirname, 'enum_struct.dart');
+const content2 = fs.readFileSync(filepath2).toString();
 
 test('Should match GameData.h from file', done => {
   let result = '';
@@ -40,5 +44,11 @@ test('Should match GameData.h from content', done => {
 test('Should convert GameData.h from content', () => {
   const result = convert(content);
   const output = fs.readFileSync(resultpath).toString();
+  expect(result).toEqual(output);
+});
+
+test('Should convert enum_struct.h from content', () => {
+  const result = convert(content2);
+  const output = fs.readFileSync(resultpath2).toString();
   expect(result).toEqual(output);
 });

@@ -1,19 +1,35 @@
+import {
+  Token,
+  TokenType,
+  NamedParam,
+  PositionalParam,
+  Param,
+  Member,
+} from './token';
 
-import { Token, TokenType, NamedParam, PositionalParam, Param } from './token';
-
-
-export function mapToToken(rawLine: any, _: number): Token {
-  const result = new Token();
+export function mapToToken(
+  this: { enumOpen: boolean; structOpen: boolean; instance: null | Token },
+  rawLine: any,
+  _: number
+): null | Token {
+  let result: null | Token = new Token();
   let line = rawLine.replace(/\s*(?=\*)/, '');
+  let tokenFound = false;
   Object.keys(TokenType).forEach(key => {
     const k = key as keyof typeof TokenType;
     const i = line.indexOf(TokenType[k]);
+    // identify the token by line start
     if (i !== -1) {
+      tokenFound = true;
       let name;
-      const id = line.substring(TokenType[k].length + 1, line.length - 1);
+
       switch (TokenType[k]) {
         case TokenType.Interface:
           name = line.substring(TokenType[k].length + 1, line.indexOf(':'));
+          if (result) {
+            result.name = name;
+            result.tokenType = TokenType[k];
+          }
           break;
         case TokenType.StaticMethod:
         case TokenType.InstanceMethod:
@@ -25,10 +41,12 @@ export function mapToToken(rawLine: any, _: number): Token {
               hasParams ? sep : line.lastIndexOf(';')
             )
             .trim();
-          result.type = line.substring(
-            line.indexOf('(') + 1,
-            line.indexOf(')')
-          );
+          if (result) {
+            result.type = line.substring(
+              line.indexOf('(') + 1,
+              line.indexOf(')')
+            );
+          }
 
           if (hasParams) {
             const paramsStr = line.substring(
@@ -52,7 +70,13 @@ export function mapToToken(rawLine: any, _: number): Token {
                 pos++;
               }
             });
-            result.params = params;
+            if (result) {
+              result.params = params;
+            }
+          }
+          if (result) {
+            result.name = name;
+            result.tokenType = TokenType[k];
           }
           break;
         case TokenType.Property:
@@ -70,19 +94,91 @@ export function mapToToken(rawLine: any, _: number): Token {
           } else {
             features = arr[arr.length - 3];
           }
-          result.type = type;
-          result.features = features
-            .substring(1, features.length - 1)
-            .split(',');
+          if (result) {
+            result.type = type;
+            result.features = features
+              .substring(1, features.length - 1)
+              .split(',');
+            result.name = name;
+            result.tokenType = TokenType[k];
+          }
+
+          break;
+        case TokenType.EnumOpen:
+          this.enumOpen = true;
+          this.instance = Token.enum();
+          result = null;
+          break;
+        case TokenType.StructOpen:
+          this.structOpen = true;
+          this.instance = Token.struct();
+          result = null;
+          break;
+        case TokenType.BraceClose:
+          if (this.enumOpen) {
+            this.enumOpen = false;
+
+            if (this.instance) {
+              this.instance.tokenType = TokenType.EnumClose;
+              name = line.substring(line.indexOf('}') + 1, line.indexOf(';'));
+              this.instance.name = name;
+            }
+            Object.assign(result, this.instance, { name });
+          } else if (this.structOpen) {
+            this.structOpen = false;
+            if (this.instance) {
+              this.instance.tokenType = TokenType.StructClose;
+              name = line.substring(line.indexOf('}') + 1, line.indexOf(';'));
+              this.instance.name = name;
+            }
+            Object.assign(result, this.instance, { name });
+          } else {
+            result = null;
+          }
+          break;
+        case TokenType.Class:
+          name = line.substring(TokenType[k].length + 1, line.length - 1);
+          if (result) {
+            result.name = name;
+            result.tokenType = TokenType[k];
+          }
+
+          break;
+        case TokenType.End:
+          if (result) {
+            result.tokenType = TokenType[k];
+          }
+          break;
+        case TokenType.BraceOpen:
+          result = null;
           break;
         default:
-          name = id;
+          result = null;
           break;
       }
-      result.name = name;
-      result.tokenType = TokenType[k];
     }
   });
+  if (tokenFound === false) {
+    // in case we can't identify the token by only one line
+    // eg. enum or struct property
+
+    if (this.enumOpen || this.structOpen) {
+      if (this.instance?.tokenType === TokenType.EnumClose.valueOf()) {
+        const name = line.match(/\w+/)[0];
+        const m = line.match(/\d+/);
+        const value = m ? m[0] : '';
+        this.instance?.members?.push(new Member(name, '', value));
+      } else if (this.instance?.tokenType === TokenType.StructClose.valueOf()) {
+        const trimed = line.trim();
+        const [type, name] = trimed
+          .substring(0, trimed.indexOf(';'))
+          .split(' ')
+          .map((x: string) => x.trim());
+        this.instance?.members?.push(new Member(name, type.trim(), ''));
+      }
+    }
+    result = null;
+  }
 
   return result;
 }
