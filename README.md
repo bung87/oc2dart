@@ -1,6 +1,5 @@
 
-# oc2dart  [![Build Status](https://travis-ci.org/bung87/oc2dart.svg?branch=master)](https://travis-ci.org/bung87/oc2dart)  [![Total alerts](https://img.shields.io/lgtm/alerts/g/bung87/oc2dart.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/bung87/oc2dart/alerts/)
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/bung87/oc2dart.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/bung87/oc2dart/context:javascript) [![Npm Version](https://badgen.net/npm/v/oc2dart)](https://www.npmjs.com/package/oc2dart)  ![npm: total downloads](https://badgen.net/npm/dt/oc2dart) ![Types](https://badgen.net/npm/types/oc2dart) ![Dep](https://badgen.net/david/dep/bung87/oc2dart) ![license](https://badgen.net/npm/license/oc2dart)
+# oc2dart  [![Build Status](https://travis-ci.org/bung87/oc2dart.svg?branch=master)](https://travis-ci.org/bung87/oc2dart)  [![Total alerts](https://img.shields.io/lgtm/alerts/g/bung87/oc2dart.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/bung87/oc2dart/alerts/) [![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/bung87/oc2dart.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/bung87/oc2dart/context:javascript) [![Npm Version](https://badgen.net/npm/v/oc2dart)](https://www.npmjs.com/package/oc2dart)  ![npm: total downloads](https://badgen.net/npm/dt/oc2dart) ![Types](https://badgen.net/npm/types/oc2dart) ![Dep](https://badgen.net/david/dep/bung87/oc2dart) ![license](https://badgen.net/npm/license/oc2dart)
 
 convert Objective-C header to dart
 
