@@ -13,13 +13,17 @@ export function mapToToken(
   _: number
 ): null | Token {
   let result: null | Token = new Token();
-  let line = rawLine.replace(/\s*(?=\*)/, '');
+  // asterisk left align to varname,
+  // multi space in declaration will make token type check fails
+  let line = rawLine.replace(/\s*(?=\*)/, '').replace(/\s+/, " ");
   let tokenFound = false;
-  Object.keys(TokenType).forEach(key => {
+  const keys = Object.keys(TokenType);
+  outerloop: 
+  for (const key of  keys) {
     const k = key as keyof typeof TokenType;
     const i = line.indexOf(TokenType[k]);
     // identify the token by line start
-    if (i !== -1) {
+    if (i === 0) {
       tokenFound = true;
       let name;
 
@@ -30,7 +34,8 @@ export function mapToToken(
             result.name = name;
             result.tokenType = TokenType[k];
           }
-          break;
+          break outerloop;
+         
         case TokenType.StaticMethod:
         case TokenType.InstanceMethod:
           const sep = line.indexOf(':');
@@ -78,7 +83,7 @@ export function mapToToken(
             result.name = name;
             result.tokenType = TokenType[k];
           }
-          break;
+          break outerloop;
         case TokenType.Property:
           line = line.replace(/\)(?=[\w])/, ') ');
           const arr = line.split(/\s+/);
@@ -103,17 +108,17 @@ export function mapToToken(
             result.tokenType = TokenType[k];
           }
 
-          break;
+          break outerloop;
         case TokenType.EnumOpen:
           this.enumOpen = true;
           this.instance = Token.enum();
           result = null;
-          break;
+          break outerloop;
         case TokenType.StructOpen:
           this.structOpen = true;
           this.instance = Token.struct();
           result = null;
-          break;
+          break outerloop;
         case TokenType.BraceClose:
           if (this.enumOpen) {
             this.enumOpen = false;
@@ -135,7 +140,7 @@ export function mapToToken(
           } else {
             result = null;
           }
-          break;
+          break outerloop;
         case TokenType.Class:
           name = line.substring(TokenType[k].length + 1, line.length - 1);
           if (result) {
@@ -143,21 +148,21 @@ export function mapToToken(
             result.tokenType = TokenType[k];
           }
 
-          break;
+          break outerloop;
         case TokenType.End:
           if (result) {
             result.tokenType = TokenType[k];
           }
-          break;
+          break outerloop;
         case TokenType.BraceOpen:
           result = null;
-          break;
+          break outerloop;
         default:
           result = null;
-          break;
+          break outerloop;
       }
     }
-  });
+  };
   if (tokenFound === false) {
     // in case we can't identify the token by only one line
     // eg. enum or struct property

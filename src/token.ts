@@ -5,9 +5,6 @@
 export enum TokenType {
   Getter = 'getter',
   Blank = 'blank',
-  End = '@end',
-  BraceOpen = '{',
-  BraceClose = '}',
   // Comma = ',',
   Class = '@class',
   Interface = '@interface',
@@ -19,6 +16,9 @@ export enum TokenType {
   EnumClose = 'enum close',
   StructClose = 'struct close',
   Member = 'member',
+  BraceOpen = '{',
+  BraceClose = '}',
+  End = '@end',
 }
 
 export class PositionalParam {
@@ -217,7 +217,8 @@ export class Token {
         result = `class ${this.name} {\n${members}\n}`;
         break;
       case TokenType.End:
-        return '}';
+        result = '}';
+        break;
       // default:
       //     result = `${this.type} ${this.name}`;
       //     break;
