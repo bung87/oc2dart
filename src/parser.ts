@@ -1,9 +1,10 @@
 
 import * as fs from 'fs';
 import * as readline from 'readline';
-import { fromEvent } from 'rxjs';
+import { fromEvent,from } from 'rxjs';
 import { toDartToken } from './converter';
 import { concatAll, filter, map, takeUntil } from 'rxjs/operators';
+import * as os from 'os';
 /*
 ** InstanceMethod - as prefix
 ** StaticMethod + as prefix
@@ -46,10 +47,10 @@ export class Token {
         self.tokenType = TokenType.StaticMethod
         return self;
     }
-    set name(v){
+    set name(v) {
         this._name = v.trim()
     }
-    get name(){
+    get name() {
         return this._name
     }
     privateToGetter(): Token {
@@ -62,14 +63,22 @@ export class Token {
     }
     handlePositionalParams() {
         const positionalParams = this.params?.filter(x => x instanceof PositionalParam).sort((a, b) => (a as PositionalParam).pos - (b as PositionalParam).pos);
-        return positionalParams?.map(x => `${x.type} ${x.varname}`).join(',').trim()
+        return positionalParams?.map(x => `${x.type} ${this.preCheckVarName(x.varname)}`).join(',').trim()
     }
     handleNamedParams() {
         const namedParams = this.params?.filter(x => x instanceof NamedParam);
-        return namedParams?.map(x => `${x.varname}: ${x.type} `).join(',').trim()
+        return namedParams?.map(x => `${this.preCheckVarName(x.varname)}: ${x.type} `).join(',').trim()
     }
     get suffixVoid() {
         return this.type !== 'void' ? `${this.type.trim()} ` : ''
+    }
+    preCheckVarName(s: string): string {
+        const keywords: { [propName: string]: string } = { 'num': 'id' };
+        if (Object.keys(keywords).includes(s)) {
+            return keywords[s];
+        } else {
+            return s;
+        }
     }
     toDartCode() {
         let result = "";
@@ -138,7 +147,7 @@ function mapToToken(line: any, _index: number): Token {
             const id = line.substring(TokenType[k].length + 1, line.length - 1);
             switch (TokenType[k]) {
                 case TokenType.Interface:
-                    name =  line.substring(TokenType[k].length + 1,line.indexOf(':') );
+                    name = line.substring(TokenType[k].length + 1, line.indexOf(':'));
                     break;
                 case TokenType.StaticMethod:
                 case TokenType.InstanceMethod:
@@ -218,6 +227,21 @@ export function fromFile(filepath: string) {
         .pipe(
             filter((x: any) => /^[\s#\t\/\{\}]/.test(x as string) === false && (x as string).length > 0),
             takeUntil(fromEvent(readInterface, 'close')),
+            map(mapToToken),
+            map(toDartToken, self), concatAll()
+        )
+
+}
+
+export function fromContent(content: string) {
+    
+    const readable = content.split(os.EOL);
+    const classes: Token[] = []
+    const converter: { [propName: string]: (token: Token) => string; } | null = null;
+    const self = { 'classes': classes, 'converter': converter }
+    return from(readable)
+        .pipe(
+            filter((x: any) => /^[\s#\t\/\{\}]/.test(x as string) === false && (x as string).length > 0),
             map(mapToToken),
             map(toDartToken, self), concatAll()
         )

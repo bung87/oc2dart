@@ -1,14 +1,40 @@
 import * as path from 'path';
-import { fromFile } from '../src/parser';
+import { fromFile,fromContent } from '../src/parser';
+import * as fs from 'fs';
 
 const filepath = path.join(__dirname,  'GameData.h');
+const resultpath = path.join(__dirname,  'game_data.dart');
+const content = fs.readFileSync(filepath).toString();
 
-test('Should greet with message', () => {
+test('Should match GameData.h from file', done  =>  {
+  let result = "";
   fromFile(filepath).subscribe(
-    (event) => {
-        console.log(event);
+    (token:any) => {
+      result += token.toDartCode() + "\n"
     },
     err => console.log("Error: %s", err),
-    () => console.log("Completed"));
-  expect(true).toBe(true);
+    () => {
+      const output = fs.readFileSync(resultpath).toString();
+      expect(result).toEqual(output)
+      done()
+    });
+  
 });
+
+test('Should match GameData.h from content', done  =>  {
+  let result = "";
+  
+  fromContent(content).subscribe(
+    (token:any) => {
+      result += token.toDartCode() + "\n"
+    },
+    err => console.log("Error: %s", err),
+    () => {
+      const output = fs.readFileSync(resultpath).toString();
+      expect(result).toEqual(output)
+      done()
+    });
+  
+});
+
+
