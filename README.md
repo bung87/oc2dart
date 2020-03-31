@@ -7,7 +7,7 @@ convert Objective-C header to dart
 ## Usage  
 
 ``` typescript
-import { fromFile,fromContent } from 'oc2dart';
+import { fromFile,fromContent,convert } from 'oc2dart';
 let result = "";
 fromFile(filepath).subscribe(
 (token:any) => {
@@ -26,5 +26,7 @@ err => console.log("Error: %s", err),
 () => {
     
 });
+
+const dartCode = convert(content)
 
 ```
