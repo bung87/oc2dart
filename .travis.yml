@@ -1,7 +1,20 @@
 language: node_js
 node_js:
-  - 'node' # use latest stable nodejs version
+- 12
+install:
+- yarn install
 script:
-  - npm run coverage # jest test with coverage flag does coverage too
-after_script:
-  - 'cat coverage/lcov.info | ./node_modules/.bin/coveralls' # sends the coverage report to coveralls
+- yarn test
+cache:
+  yarn: true
+  directories:
+  - node_modules
+before_deploy:
+  - yarn dist
+deploy:
+  provider: npm
+  on:
+    tags: true
+  email: "crc32@qq.com"
+  api_key:
+    secure: khFKW2dFnPlutI2a2tbCpz1mU44TG5xR0KAlhwTkFmLOR9R8tSnabR39hhj7Ks83+7UD/vo3hTbLGE+7w4NjPyJqn+a4eO+DedKp+ejBCYFKq4LMLJ0HluMRJKkFYSfTslRl1aYfk1WxEIe+4GVKfqdgAk+XpV/mPWiVh9GKls8bV4F3/UjDMmtsVdjQ9Kwa1pxkVutW/urcmm1+jDURb6xhMDVC3yyIxtr+dxU2hT9IqBhfLavFNejO15auq9G2yMRcXsg+Qj/y6aoOanJO5aby9wDlzPy8qTx1rvPasYOC+reXonyv7AY7JQRLaxl/7aaeOw5bJvABcZfpViUXQ6ixgvPmrcoCwT7V5AJst9jMDxZlr+L92JNJW6X8c/0CSCOsUXFtB1FR3W5zF4OORXR2e+bQvQ62M2visYeGVIQ00C86BV+wZ8Gy7ySxJe38Zl/YZmH+xHyNHCb8dxI8lblB+LdU91TZDKjXnfPfAh1ZkqOo1yCW+1l0w3GhSx5mep5B9XYZ+ciAy2SCbWeVAeg796ZTujcQsz/S27I26IZheKuOm1wzU+0DtmPKkuWU2I4TxlrdbFUXypt0PGwS09sHvgFdc1OeqTTOryO6Pfs+Cfgfvo+B/dVI/VrcvBE/rBYJJroFZrvhR+unJtW+5zJYOKwCT9DHdqXEwYK7l2I=
