@@ -46,6 +46,7 @@ export function getConverter(
     'NSString*': (_: Token) => 'String',
     BOOL: (_: Token) => 'bool',
     void: (_: Token) => 'void',
+    'NSNumber*':(_: Token) => 'num',
     'NSArray*': handleArr,
     'NSMutableArray*': handleArr,
     'NSDictionary*': (_: Token) => {
@@ -84,6 +85,11 @@ export function toDartToken(this: any, token: Token): Token[] {
         result.push(t);
         result.push(t2);
       } else if (token.features?.includes('readwrite')) {
+        const t = Token.property();
+        t.name = token.name;
+        t.type = this.converter[token.type](token) as string;
+        result.push(t);
+      }else{
         const t = Token.property();
         t.name = token.name;
         t.type = this.converter[token.type](token) as string;

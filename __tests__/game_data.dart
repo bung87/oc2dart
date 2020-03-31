@@ -35,6 +35,9 @@ class DataCache{
   int nextRDrama;
   int chapterIndex;
   int maxBattlePlayerNum;
+  String placeName;
+  String eventName;
+  String BGMName;
   static DataCache sharedDataCache() {}
   static purgeSharedDataCache() {}
   addDatasWithFileName(String fileName ){}
