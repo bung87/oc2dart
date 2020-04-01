@@ -73,7 +73,6 @@ export function mapToToken(
             });
 
             result.params = params;
-
           }
 
           result.name = name;
