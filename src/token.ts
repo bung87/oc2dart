@@ -71,14 +71,14 @@ export class Token {
   static enum() {
     const self = new Token();
     self.members = [];
-    self.tokenType = TokenType.EnumClose;
+    self.tokenType = TokenType.EnumOpen;
     return self;
   }
 
   static struct() {
     const self = new Token();
     self.members = [];
-    self.tokenType = TokenType.StructClose;
+    self.tokenType = TokenType.StructOpen;
     return self;
   }
 

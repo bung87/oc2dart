@@ -8,7 +8,7 @@ import { mapToToken } from './parser';
 import { Token } from './token';
 // const RegForInterface = /^[\s#\t\/\{\}]/
 const filterLine = (x: any) =>
-  /^[#\t\/]/.test(x as string) === false && (x as string).length > 0;
+  /^[#\t\/]/.test(x as string) === false && (x as string).trim().length > 0;
 
 export function fromFile(filepath: string) {
   const readInterface = readline.createInterface({

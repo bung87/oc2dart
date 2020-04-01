@@ -29,10 +29,8 @@ export function mapToToken(
       switch (TokenType[k]) {
         case TokenType.Interface:
           name = line.substring(TokenType[k].length + 1, line.indexOf(':'));
-          if (result) {
-            result.name = name;
-            result.tokenType = TokenType[k];
-          }
+          result.name = name;
+          result.tokenType = TokenType[k];
           break outerloop;
 
         case TokenType.StaticMethod:
@@ -45,12 +43,11 @@ export function mapToToken(
               hasParams ? sep : line.lastIndexOf(';')
             )
             .trim();
-          if (result) {
-            result.type = line.substring(
-              line.indexOf('(') + 1,
-              line.indexOf(')')
-            );
-          }
+
+          result.type = line.substring(
+            line.indexOf('(') + 1,
+            line.indexOf(')')
+          );
 
           if (hasParams) {
             const paramsStr = line.substring(
@@ -74,14 +71,14 @@ export function mapToToken(
                 pos++;
               }
             });
-            if (result) {
-              result.params = params;
-            }
+
+            result.params = params;
+
           }
-          if (result) {
-            result.name = name;
-            result.tokenType = TokenType[k];
-          }
+
+          result.name = name;
+          result.tokenType = TokenType[k];
+
           break outerloop;
         case TokenType.Property:
           line = line.replace(/\)(?=[\w])/, ') ');
@@ -98,15 +95,13 @@ export function mapToToken(
           } else {
             features = arr[arr.length - 3];
           }
-          if (result) {
-            result.type = type;
-            result.features = features
-              .substring(1, features.length - 1)
-              .split(',');
-            result.name = name;
-            result.tokenType = TokenType[k];
-          }
 
+          result.type = type;
+          result.features = features
+            .substring(1, features.length - 1)
+            .split(',');
+          result.name = name;
+          result.tokenType = TokenType[k];
           break outerloop;
         case TokenType.EnumOpen:
           this.enumOpen = true;
@@ -142,16 +137,11 @@ export function mapToToken(
           break outerloop;
         case TokenType.Class:
           name = line.substring(TokenType[k].length + 1, line.length - 1);
-          if (result) {
-            result.name = name;
-            result.tokenType = TokenType[k];
-          }
-
+          result.name = name;
+          result.tokenType = TokenType[k];
           break outerloop;
         case TokenType.End:
-          if (result) {
-            result.tokenType = TokenType[k];
-          }
+          result.tokenType = TokenType[k];
           break outerloop;
         case TokenType.BraceOpen:
           result = null;
@@ -167,12 +157,12 @@ export function mapToToken(
     // eg. enum or struct property
 
     if (this.enumOpen || this.structOpen) {
-      if (this.instance?.tokenType === TokenType.EnumClose.valueOf()) {
+      if (this.instance?.tokenType === TokenType.EnumOpen.valueOf()) {
         const name = line.match(/\w+/)[0];
         const m = line.match(/\d+/);
         const value = m ? m[0] : '';
         this.instance?.members?.push(new Member(name, '', value));
-      } else if (this.instance?.tokenType === TokenType.StructClose.valueOf()) {
+      } else if (this.instance?.tokenType === TokenType.StructOpen.valueOf()) {
         const trimed = line.trim();
         const [type, name] = trimed
           .substring(0, trimed.indexOf(';'))
