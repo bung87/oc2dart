@@ -30,3 +30,7 @@ err => console.log("Error: %s", err),
 const dartCode = convert(content)
 
 ```
+
+## Editor support  
+
+[oc2dart-vscode-extension](https://marketplace.visualstudio.com/items?itemName=bung87.oc2dart)
