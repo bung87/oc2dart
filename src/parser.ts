@@ -15,11 +15,10 @@ export function mapToToken(
   let result: null | Token = new Token();
   // asterisk left align to varname,
   // multi space in declaration will make token type check fails
-  let line = rawLine.replace(/\s*(?=\*)/, '').replace(/\s+/, " ");
+  let line = rawLine.replace(/\s*(?=\*)/, '').replace(/\s+/, ' ');
   let tokenFound = false;
   const keys = Object.keys(TokenType);
-  outerloop: 
-  for (const key of  keys) {
+  outerloop: for (const key of keys) {
     const k = key as keyof typeof TokenType;
     const i = line.indexOf(TokenType[k]);
     // identify the token by line start
@@ -35,7 +34,7 @@ export function mapToToken(
             result.tokenType = TokenType[k];
           }
           break outerloop;
-         
+
         case TokenType.StaticMethod:
         case TokenType.InstanceMethod:
           const sep = line.indexOf(':');
@@ -162,7 +161,7 @@ export function mapToToken(
           break outerloop;
       }
     }
-  };
+  }
   if (tokenFound === false) {
     // in case we can't identify the token by only one line
     // eg. enum or struct property

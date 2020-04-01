@@ -46,7 +46,7 @@ export function getConverter(
     'NSString*': (_: Token | Member) => 'String',
     BOOL: (_: Token | Member) => 'bool',
     void: (_: Token | Member) => 'void',
-    'id':(_: Token | Member) => 'dynamic',
+    id: (_: Token | Member) => 'dynamic',
     'NSNumber*': (_: Token | Member) => 'num',
     'NSArray*': handleArr,
     'NSMutableArray*': handleArr,
