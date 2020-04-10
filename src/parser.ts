@@ -8,7 +8,7 @@ import {
 } from './token';
 
 export function mapToToken(
-  this: { enumOpen: boolean; structOpen: boolean; instance: null | Token },
+  this: { enumOpen: boolean; structOpen: boolean; instance: null | Token, previous: any[] },
   rawLine: any,
   _: number
 ): null | Token {
@@ -152,6 +152,20 @@ export function mapToToken(
     }
   }
   if (tokenFound === false) {
+    const lastToken = this.previous[this.previous.length - 1];
+    if (lastToken && lastToken.tokenType === '@interface') {
+      const arr = line.split(/\s+/);
+      let name = arr[arr.length - 1];
+      name = name.substring(0, name.length - 1);
+      const type = arr[arr.length - 2];
+      if (result) {
+        result.type = type;
+        result.name = name.replace(/([\w]+)_$/,"_$1");
+        result.tokenType = TokenType.Property;
+        return result;
+      }
+
+    }
     // in case we can't identify the token by only one line
     // eg. enum or struct property
 
@@ -171,6 +185,8 @@ export function mapToToken(
       }
     }
     result = null;
+  } else {
+    this.previous.push(result);
   }
 
   return result;

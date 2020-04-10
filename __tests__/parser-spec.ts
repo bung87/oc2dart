@@ -10,6 +10,10 @@ const filepath2 = path.join(__dirname, 'enum_struct.h');
 const resultpath2 = path.join(__dirname, 'enum_struct.dart');
 const content2 = fs.readFileSync(filepath2).toString();
 
+const filepath3 = path.join(__dirname, 'Skill.h');
+const content3 = fs.readFileSync(filepath3).toString();
+const resultpath3 = path.join(__dirname, 'skill.dart');
+
 test('Should match GameData.h from file', done => {
   let result = '';
   fromFile(filepath).subscribe(
@@ -52,3 +56,10 @@ test('Should convert enum_struct.h from content', () => {
   const output = fs.readFileSync(resultpath2).toString();
   expect(result).toEqual(output);
 });
+
+test('Should convert Skill.h from content', () => {
+  const result = convert(content3);
+  const output = fs.readFileSync(resultpath3).toString();
+  expect(result).toEqual(output);
+});
+

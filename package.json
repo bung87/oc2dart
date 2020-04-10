@@ -30,6 +30,7 @@
     "watch:test": "jest --watch"
   },
   "dependencies": {
+    "json-stable-stringify-without-jsonify": "^1.0.1",
     "rxjs": "^6.5.4"
   },
   "devDependencies": {
