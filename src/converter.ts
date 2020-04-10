@@ -46,7 +46,7 @@ export function getConverter(
     'NSString*': (_: Token | Member) => 'String',
     BOOL: (_: Token | Member) => 'bool',
     void: (_: Token | Member) => 'void',
-    float:(_: Token | Member) => 'double',
+    float: (_: Token | Member) => 'double',
     'NSMutableString*': (_: Token | Member) => 'String',
     id: (_: Token | Member) => 'dynamic',
     'NSNumber*': (_: Token | Member) => 'num',
@@ -127,28 +127,30 @@ export function toDartToken(this: any, token: any): Token[] {
           Object.assign(y, { ...x, type: this.converter[x.type](x) });
           return y;
         });
-        if(typeof t.params === "undefined" || t.params.length === 0){
-          
-          if(this.previous.filter( (x:any) => x).some( (x:Token) => {
-            // console.log(x,t);
-            return x.tokenType === TokenType.Interface && x.name === t.type
-          })){
+        if (typeof t.params === 'undefined' || t.params.length === 0) {
+          if (
+            this.previous
+              .filter((x: any) => x)
+              .some((x: Token) => {
+                // console.log(x,t);
+                return x.tokenType === TokenType.Interface && x.name === t.type;
+              })
+          ) {
             const t2 = Token.property();
-            t2.type = `static final ${t.type}`
-            t2.name = "_singleton";
+            t2.type = `static final ${t.type}`;
+            t2.name = '_singleton';
             t2.body = `${t.type}._internal()`;
-            const t3 = Token.instanceMethod()
-            t3.type ="factory";
-            t3.name = t.type
-            t3.body = "return _singleton;";
+            const t3 = Token.instanceMethod();
+            t3.type = 'factory';
+            t3.name = t.type;
+            t3.body = 'return _singleton;';
             const t4 = Token.instanceMethod();
             t4.name = `${t.type}._internal`;
-            result.push(t2,t3,t4);
+            result.push(t2, t3, t4);
             return result;
           }
         }
         result.push(t);
-        
       }
       break;
     case TokenType.StructClose:

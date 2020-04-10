@@ -62,4 +62,3 @@ test('Should convert Skill.h from content', () => {
   const output = fs.readFileSync(resultpath3).toString();
   expect(result).toEqual(output);
 });
-

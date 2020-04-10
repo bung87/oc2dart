@@ -49,9 +49,14 @@ export function fromFile(filepath: string) {
   const converter: {
     [propName: string]: (token: Token) => string;
   } | null = null;
-  const previous:any[] = [];
+  const previous: any[] = [];
   const self = { classes, converter, previous };
-  const flags = { enumOpen: false, structOpen: false, instance: null, previous };
+  const flags = {
+    enumOpen: false,
+    structOpen: false,
+    instance: null,
+    previous,
+  };
   return fromEvent(readInterface, 'line').pipe(
     filter(filterLine),
     takeUntil(fromEvent(readInterface, 'close')),
@@ -64,16 +69,20 @@ export function fromFile(filepath: string) {
   );
 }
 
-
 export function fromContent(content: string) {
   const readable = content.split(os.EOL);
   const classes: Token[] = [];
   const converter: {
     [propName: string]: (token: Token) => string;
   } | null = null;
-  const previous:any[] = [];
+  const previous: any[] = [];
   const self = { classes, converter, previous };
-  const flags = { enumOpen: false, structOpen: false, instance: null, previous };
+  const flags = {
+    enumOpen: false,
+    structOpen: false,
+    instance: null,
+    previous,
+  };
   return from(readable).pipe(
     filter(filterLine),
     map(mapToToken, flags),
@@ -90,10 +99,15 @@ export function convert(content: string) {
   const converter: {
     [propName: string]: (token: Token) => string;
   } | null = null;
-  const previous:any[] = [];
+  const previous: any[] = [];
   const self = { classes, converter, previous };
   const readable = content.split(os.EOL);
-  const flags = { enumOpen: false, structOpen: false, instance: null, previous };
+  const flags = {
+    enumOpen: false,
+    structOpen: false,
+    instance: null,
+    previous,
+  };
   return (
     readable
       .filter(filterLine)
