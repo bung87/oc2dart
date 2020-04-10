@@ -6,8 +6,6 @@ import { concatAll, filter, map, takeUntil } from 'rxjs/operators';
 import * as os from 'os';
 import { mapToToken } from './parser';
 import { Token } from './token';
-
-// @ts-ignore:next-line
 import * as stringify from 'json-stable-stringify-without-jsonify';
 // const RegForInterface = /^[\s#\t\/\{\}]/
 const filterLine = (x: any) =>
