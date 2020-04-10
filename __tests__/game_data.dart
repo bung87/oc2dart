@@ -38,7 +38,9 @@ class DataCache{
   String placeName;
   String eventName;
   String BGMName;
-  static DataCache sharedDataCache() {}
+  static final DataCache _singleton= DataCache._internal();
+  factory DataCache() {return _singleton;}
+  DataCache._internal() {}
   static purgeSharedDataCache() {}
   addDatasWithFileName(String fileName ){}
   addNewGameDatas() {}

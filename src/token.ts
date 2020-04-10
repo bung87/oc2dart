@@ -26,7 +26,7 @@ export class PositionalParam {
     public pos: number,
     public type: string,
     public varname: string
-  ) {}
+  ) { }
 }
 
 export class NamedParam {
@@ -34,11 +34,11 @@ export class NamedParam {
     public name: string,
     public type: string,
     public varname: string
-  ) {}
+  ) { }
 }
 
 export class Member {
-  constructor(public name: string, public type: string, public value: any) {}
+  constructor(public name: string, public type: string, public value: any) { }
 }
 
 export type Param = PositionalParam | NamedParam;
@@ -121,7 +121,7 @@ export class Token {
       .trim();
   }
   get suffixVoid() {
-    return this.type !== 'void' ? `${this.type.trim()} ` : '';
+    return this.type !== 'void' ? `${this.type.length ? this.type.trim() + " " : ""}` : '';
   }
   preCheckVarName(s: string): string {
     const keywords: { [propName: string]: string } = { num: 'id' };
@@ -138,10 +138,10 @@ export class Token {
         result = `class ${this.name}{`;
         break;
       case TokenType.Property:
-        result = `${this.type} ${this.name};`;
+        result = `${this.type} ${this.name}${this.body ? "= " + this.body : ""};`;
         break;
       case TokenType.Getter:
-        result = `${this.type} get ${this.name} => ${this.body};`;
+        result = `${this.type} get ${this.name} => ${this.body || ""};`;
         break;
       case TokenType.InstanceMethod:
         if (this.params) {
@@ -152,18 +152,18 @@ export class Token {
           if (hasPositinal && hasNamed) {
             result = `${this.suffixVoid}${
               this.name
-            }(${this.handlePositionalParams()},{ ${this.handleNamedParams()} } ){}`;
+              }(${this.handlePositionalParams()},{ ${this.handleNamedParams()} } ){${this.body || ""}}`;
           } else if (hasPositinal) {
             result = `${this.suffixVoid}${
               this.name
-            }(${this.handlePositionalParams()} ){}`;
+              }(${this.handlePositionalParams()} ){${this.body || ""}}`;
           } else if (hasNamed) {
             result = `${this.suffixVoid}${
               this.name
-            }({ ${this.handleNamedParams()} } ){}`;
+              }({ ${this.handleNamedParams()} } ){${this.body || ""}}`;
           }
         } else {
-          result = `${this.suffixVoid}${this.name}() {}`;
+          result = `${this.suffixVoid}${this.name}() {${this.body || ""}}`;
         }
         break;
       case TokenType.StaticMethod:
@@ -175,15 +175,15 @@ export class Token {
           if (hasPositinal && hasNamed) {
             result = `static ${this.suffixVoid}${
               this.name
-            }(${this.handlePositionalParams()},{ ${this.handleNamedParams()} } ){}`;
+              }(${this.handlePositionalParams()},{ ${this.handleNamedParams()} } ){}`;
           } else if (hasPositinal) {
             result = `static ${this.suffixVoid}${
               this.name
-            }(${this.handlePositionalParams()} ){}`;
+              }(${this.handlePositionalParams()} ){}`;
           } else if (hasNamed) {
             result = `static ${this.suffixVoid}${
               this.name
-            }({ ${this.handleNamedParams()} } ){}`;
+              }({ ${this.handleNamedParams()} } ){}`;
           }
         } else {
           result = `static ${this.suffixVoid}${this.name}() {}`;
